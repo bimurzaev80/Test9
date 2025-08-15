@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<title>Профориентационный тест: Программирование / Администрирование / Инфобез</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<style>
+:root {
+  --bg:#0f1115; --panel:#1b2027; --panel-alt:#242b34; --acc:#3fa4ff; --acc2:#6dd679; --danger:#ff5f56; --warn:#ffb347; --font:#e6ecf3;
+  --radius:10px;
+  font-size:16px;
+}
+* {box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;}
+body {
+  margin:0; background:linear-gradient(140deg,#10141c,#161d25 55%,#1d2630); color:var(--font); line-height:1.4;
+}
+header {
+  padding:1rem 1.2rem; background:#12171d; position:sticky; top:0; z-index:10;
+  display:flex; flex-wrap:wrap; gap:1rem; align-items:center; justify-content:space-between;
+}
+h1 {font-size:1.1rem; margin:.2rem 0;}
+.timer {font-weight:600; font-variant-numeric:tabular-nums; color:var(--acc);}
+main {max-width:1100px; margin:0 auto; padding:1rem 1rem 3.5rem;}
+section#intro {background:var(--panel); padding:1rem 1.2rem; border-radius:var(--radius); margin-bottom:1rem;}
+.instructions {display:grid; gap:.4rem; font-size:.9rem;}
+.question-group {background:var(--panel); padding:1rem 1.2rem; border-radius:var(--radius); margin-bottom:1rem;}
+.question-group h2 {margin-top:0; font-size:1rem; letter-spacing:.5px;}
+.q-item {padding:.7rem .8rem; margin:.4rem 0; background:var(--panel-alt); border-radius:8px; position:relative;}
+.q-item:hover {outline:1px solid #314050;}
+.q-text {margin:0 0 .5rem; font-size:.92rem;}
+.scale {display:flex; gap:.6rem; flex-wrap:wrap;}
+.scale label {display:flex; flex-direction:column; align-items:center; gap:.25rem; font-size:.65rem; letter-spacing:.3px; cursor:pointer; background:#2d3640; padding:.35rem .45rem; border-radius:6px; min-width:42px; transition:.15s;}
+.scale input {margin:0;}
+.scale label:hover, .scale label:has(input:checked) {background:var(--acc); color:#000; font-weight:600;}
+.scenario-options {display:grid; gap:.5rem; margin-top:.4rem;}
+.scenario-options label {background:#2d3640; padding:.55rem .7rem; border-radius:6px; cursor:pointer; display:flex; gap:.6rem; align-items:flex-start; font-size:.85rem; line-height:1.25;}
+.scenario-options label:hover, .scenario-options label:has(input:checked) {background:var(--acc); color:#000; font-weight:600;}
+.actions {display:flex; flex-wrap:wrap; gap:.8rem; margin:1.5rem 0;}
+button {
+  cursor:pointer; border:none; border-radius:8px; padding:.9rem 1.2rem; font-size:.9rem; font-weight:600; letter-spacing:.5px;
+  background:var(--acc); color:#06141d; box-shadow:0 4px 12px -3px #0008;
+  transition:.2s;
+}
+button.secondary {background:#2f3944; color:var(--font);}
+button.danger {background:var(--danger); color:#fff;}
+button:hover {transform:translateY(-2px); box-shadow:0 6px 16px -4px #000c;}
+#results {background:var(--panel); padding:1.2rem 1.4rem; border-radius:var(--radius); margin-top:1.2rem; display:none;}
+.res-grid {display:grid; gap:.8rem; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); margin-top:.8rem;}
+.res-box {background:var(--panel-alt); padding:.8rem .9rem; border-radius:8px; position:relative;}
+.res-box h3 {margin:.1rem 0 .3rem; font-size:.85rem; letter-spacing:.6px; font-weight:600; text-transform:uppercase;}
+.res-score {font-size:1.4rem; font-weight:700;}
+.tag {display:inline-block; background:#2d3945; color:#9ad0ff; font-size:.55rem; padding:2px 6px; border-radius:20px; letter-spacing:.5px; margin-right:.3rem;}
+.highlight {color:var(--acc2);}
+#chart-wrap {margin-top:1rem; background:#202831; padding:1rem; border-radius:10px;}
+footer {text-align:center; padding:2rem 1rem; font-size:.7rem; opacity:.6;}
+.progress-bar {height:8px; border-radius:4px; background:#2a333d; overflow:hidden; margin-top:.6rem;}
+.progress-bar span {display:block; height:100%; background:linear-gradient(90deg,var(--acc),#56ccf7); width:0%; transition:width .3s;}
+.notice {font-size:.7rem; opacity:.65; margin-top:.4rem;}
+.copy-box {margin-top:1rem;}
+@media (max-width:650px){
+  .scale {gap:.4rem;}
+  header {flex-direction:column; align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Профориентационный тест (15 минут)</h1>
+    <div class="notice">Программирование • Администрирование • Информационная безопасность</div>
+  </div>
+  <div>
+    <div class="timer" id="timer">15:00</div>
+    <div class="progress-bar"><span id="progress"></span></div>
+  </div>
+</header>
+
+<main>
+  <section id="intro">
+    <p><strong>Инструкция:</strong> Ответьте на все утверждения. Используйте шкалу (1–5). Сценарные вопросы — выберите один вариант. Время ограничено 15 минутами. Результат появится автоматически или после кнопки «Рассчитать».</p>
+    <p style="font-size:.8rem; opacity:.7;">Данные хранятся локально в вашем браузере (localStorage). Нажмите «Сбросить», чтобы всё очистить.</p>
+  </section>
+
+  <form id="quiz"></form>
+
+  <div class="actions">
+    <button type="button" id="calcBtn">Рассчитать результат</button>
+    <button type="button" class="secondary" id="saveBtn">Сохранить прогресс</button>
+    <button type="button" class="secondary" id="loadBtn">Загрузить прогресс</button>
+    <button type="button" class="danger" id="resetBtn">Сбросить</button>
+  </div>
+
+  <section id="results">
+    <h2>Результаты</h2>
+    <div id="summaryText"></div>
+    <div id="chart-wrap">
+      <canvas id="radarChart" width="400" height="380" aria-label="Диаграмма результатов" role="img"></canvas>
+    </div>
+    <div class="res-grid" id="resBoxes"></div>
+    <div class="copy-box">
+      <button type="button" id="copyBtn" class="secondary">Скопировать текст отчёта</button>
+      <div id="copyStatus" class="notice"></div>
+    </div>
+    <p class="notice">Это ориентировочный анализ. Рекомендуется дополнить его практическими мини‑проектами и консультацией с наставником.</p>
+  </section>
+</main>
+
+<footer>
+  © 2025 Профориентационный модуль. Версия для демонстрации. Создано для ориентира: не является психометрически стандартизированным тестом.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha384-eyV8mP4B31SfyS/vvGyG6GudR27jlDhoUj2JHgjwNoEL+0Tye9uqJni+c3ekG9V2" crossorigin="anonymous"></script>
+<script>
+/* ===================== Конфигурация вопросов ===================== */
+
+const likertQuestions = [
+  { id:"L1",  text:"Мне нравится преобразовывать сложную задачу в пошаговый алгоритм.", w:{prog:1} },
+  { id:"L2",  text:"Я получаю удовольствие от написания кода, даже если нужно долго отлаживать.", w:{prog:1} },
+  { id:"L3",  text:"Интересно разбираться, почему сервер или устройство перестало работать.", w:{sys:1} },
+  { id:"L4",  text:"Хочу автоматизировать рутину скриптами.", w:{prog:0.5, sys:0.5} },
+  { id:"L5",  text:"Меня привлекает идея защищать системы от злоумышленников.", w:{sec:1} },
+  { id:"L6",  text:"Мне легко удерживать в голове архитектуру проекта.", w:{prog:0.7, sys:0.3} },
+  { id:"L7",  text:"Люблю настраивать устройства, роутеры, виртуальные машины.", w:{sys:1} },
+  { id:"L8",  text:"Нравится искать слабые места в программах или логике действий.", w:{sec:1} },
+  { id:"L9",  text:"Мне комфортно читать техническую документацию.", w:{prog:0.4, sys:0.3, sec:0.3} },
+  { id:"L10", text:"Интересно оптимизировать производительность программы.", w:{prog:1} },
+  { id:"L11", text:"Мне нравится решать инциденты: что сломалось и почему.", w:{sys:0.7, sec:0.3} },
+  { id:"L12", text:"Хочу понимать модели угроз и сценарии атак.", w:{sec:1} },
+  { id:"L13", text:"Важно создавать понятный, поддерживаемый код.", w:{prog:1} },
+  { id:"L14", text:"Привлекает идея оркестрировать инфраструктуру (кластеры, контейнеры).", w:{sys:0.7, prog:0.3} },
+  { id:"L15", text:"Мне нравится логический анализ журналов событий.", w:{sec:0.7, sys:0.3} },
+  { id:"L16", text:"Хочу делать интерфейсы или сервисы, которыми пользуются люди.", w:{prog:1} },
+  { id:"L17", text:"Мне интересна надежность: резервирование, отказоустойчивость.", w:{sys:1} },
+  { id:"L18", text:"Получаю удовольствие от расследования, похожего на детектив.", w:{sec:0.8, sys:0.2} },
+  { id:"L19", text:"Готов тщательно документировать процессы и соблюдение правил.", w:{sec:0.6, sys:0.2, prog:0.2} },
+  { id:"L20", text:"Интересно строить пайплайны: сборка, тесты, деплой.", w:{prog:0.6, sys:0.4} },
+  { id:"L21", text:"Легко обучаюсь новым языкам программирования.", w:{prog:1} },
+  { id:"L22", text:"Нравится анализировать сетевые пакеты/трафик.", w:{sec:0.5, sys:0.5} },
+  { id:"L23", text:"Чувствую азарт в поиске уязвимостей или логических дыр.", w:{sec:1} },
+  { id:"L24", text:"Интересно оптимизировать расход ресурсов сервера.", w:{sys:0.8, prog:0.2} },
+  { id:"L25", text:"Предпочитаю строить собственные решения, а не только настраивать чужие.", w:{prog:0.8, sys:0.2} },
+  { id:"L26", text:"Готов отслеживать новости киберугроз и адаптировать защиту.", w:{sec:1} },
+  { id:"L27", text:"Мне нравится писать скрипты для автоматизации инфраструктуры.", w:{sys:0.6, prog:0.4} },
+  { id:"L28", text:"Интересно проводить код-ревью (искать ошибки, улучшать качество).", w:{prog:0.7, sec:0.3} },
+  { id:"L29", text:"Люблю систематизировать: политика доступа, роли, права.", w:{sec:0.8, sys:0.2} },
+  { id:"L30", text:"Получаю удовлетворение, когда сервисы стабильно работают и мониторинг «зелёный».", w:{sys:0.9, prog:0.1} }
+];
+
+const scenarioQuestions = [
+  {
+    id:"S1",
+    text:"В учебном проекте внезапно перестал отвечать сервер. Ваш первый импульс?",
+    options:[
+      {key:"A", label:"Открыть логи и посмотреть последовательность ошибок.", w:{sys:0.7, sec:0.3}},
+      {key:"B", label:"Подумать, не обновлял ли я недавно модуль / код — и воспроизвести локально.", w:{prog:0.8, sys:0.2}},
+      {key:"C", label:"Оценить, нет ли признаков атаки или подозрительных запросов.", w:{sec:1}},
+      {key:"D", label:"Перезапустить всё и надеяться, что исправится (минимум анализа).", w:{}}
+    ]
+  },
+  {
+    id:"S2",
+    text:"Что из списка вызывает у вас наибольший интерес для углубления?",
+    options:[
+      {key:"A", label:"Глубокие алгоритмы и структуры данных.", w:{prog:1}},
+      {key:"B", label:"Сетевые протоколы и маршрутизация.", w:{sys:1}},
+      {key:"C", label:"Методы эксплуатации уязвимостей.", w:{sec:1}},
+      {key:"D", label:"Автоматизация деплоя сервисов.", w:{prog:0.5, sys:0.5}}
+    ]
+  },
+  {
+    id:"S3",
+    text:"Вам дают неделю свободного времени для саморазвития. Вы выберете:",
+    options:[
+      {key:"A", label:"Написать мини‑приложение с новыми фреймворками.", w:{prog:1}},
+      {key:"B", label:"Поднять домашний кластер и настроить мониторинг.", w:{sys:1}},
+      {key:"C", label:"Проходить CTF и практиковаться в перехвате трафика.", w:{sec:1}},
+      {key:"D", label:"Скрипты для унификации окружений.", w:{prog:0.4, sys:0.6}}
+    ]
+  },
+  {
+    id:"S4",
+    text:"Что вас больше мотивирует в успехе проекта?",
+    options:[
+      {key:"A", label:"Пользователи хвалят функционал и удобство.", w:{prog:1}},
+      {key:"B", label:"Сервисы работают без простоев и всё предсказуемо.", w:{sys:1}},
+      {key:"C", label:"Система устойчива к атакам и попыткам взлома.", w:{sec:1}},
+      {key:"D", label:"CI/CD пайплайн сам всё собирает и деплоит.", w:{prog:0.5, sys:0.5}}
+    ]
+  },
+  {
+    id:"S5",
+    text:"Что кажется наиболее сложным (но притягательным) челленджем?",
+    options:[
+      {key:"A", label:"Оптимизировать алгоритм в 5 раз быстрее.", w:{prog:1}},
+      {key:"B", label:"Снизить простои инфраструктуры до почти нуля.", w:{sys:1}},
+      {key:"C", label:"Найти скрытую уязвимость до злоумышленника.", w:{sec:1}},
+      {key:"D", label:"Собрать универсальный скриптовый инструмент для команды.", w:{prog:0.4, sys:0.6}}
+    ]
+  },
+  {
+    id:"S6",
+    text:"Вы видите странный всплеск запросов. Ваш приоритет:",
+    options:[
+      {key:"A", label:"Профилировать код — вдруг неэффективный участок.", w:{prog:0.9, sys:0.1}},
+      {key:"B", label:"Проверить нагрузку и балансировку сервисов.", w:{sys:1}},
+      {key:"C", label:"Рассмотреть возможность атаки (DDoS / скан).", w:{sec:1}},
+      {key:"D", label:"Добавить кэш / временное масштабирование через скрипт.", w:{sys:0.6, prog:0.4}}
+    ]
+  }
+];
+
+const TOTAL_TIME_SEC = 15 * 60;
+
+/* ===================== Генерация формы ===================== */
+const quizForm = document.getElementById('quiz');
+
+function buildLikert(q){
+  const div = document.createElement('div');
+  div.className = 'q-item';
+  div.dataset.qid = q.id;
+  div.innerHTML = `
+    <p class="q-text"><strong>${q.id}.</strong> ${q.text}</p>
+    <div class="scale" role="radiogroup" aria-label="Шкала ответа">
+      ${[1,2,3,4,5].map(v => `
+        <label>
+          <input type="radio" name="${q.id}" value="${v}" aria-label="${v}">
+          <span>${v}</span>
+        </label>
+      `).join('')}
+    </div>
+  `;
+  return div;
+}
+
+function buildScenario(q){
+  const div = document.createElement('div');
+  div.className = 'q-item';
+  div.dataset.qid = q.id;
+  div.innerHTML = `
+    <p class="q-text"><strong>${q.id}.</strong> ${q.text}</p>
+    <div class="scenario-options" role="radiogroup">
+      ${q.options.map(o => `
+        <label>
+          <input type="radio" name="${q.id}" value="${o.key}">
+          <span><strong>${o.key})</strong> ${o.label}</span>
+        </label>
+      `).join('')}
+    </div>
+  `;
+  return div;
+}
+
+function renderForm(){
+  quizForm.innerHTML = '';
+  const grp1 = document.createElement('div');
+  grp1.className='question-group';
+  grp1.innerHTML='<h2>Часть 1: Утверждения (шкала 1–5)</h2>';
+  likertQuestions.forEach(q => grp1.appendChild(buildLikert(q)));
+
+  const grp2 = document.createElement('div');
+  grp2.className='question-group';
+  grp2.innerHTML='<h2>Часть 2: Сценарии (выберите один вариант)</h2>';
+  scenarioQuestions.forEach(q => grp2.appendChild(buildScenario(q)));
+
+  quizForm.appendChild(grp1);
+  quizForm.appendChild(grp2);
+}
+renderForm();
+
+/* ===================== Прогресс ===================== */
+function updateProgress(){
+  const answered = [...quizForm.querySelectorAll('.q-item')].filter(el => {
+    const name = el.dataset.qid;
+    return quizForm.querySelector(`input[name="${name}"]:checked`);
+  }).length;
+  const total = likertQuestions.length + scenarioQuestions.length;
+  const percent = Math.round((answered/total)*100);
+  document.getElementById('progress').style.width = percent + '%';
+}
+quizForm.addEventListener('change', updateProgress);
+
+/* ===================== Подсчет ===================== */
+function compute(){
+  const answers = {};
+  let allAnswered = true;
+  [...quizForm.querySelectorAll('.q-item')].forEach(el=>{
+    const id = el.dataset.qid;
+    const checked = quizForm.querySelector(`input[name="${id}"]:checked`);
+    if(!checked){ allAnswered = false; }
+    else answers[id] = checked.value;
+  });
+
+  const scores = {prog:0, sys:0, sec:0};
+  const max = {prog:0, sys:0, sec:0};
+
+  // Likert
+  likertQuestions.forEach(q=>{
+    const val = parseInt(answers[q.id] || 0, 10);
+    const w = q.w;
+    ['prog','sys','sec'].forEach(k=>{
+      const weight = w[k] || 0;
+      scores[k] += val * weight;
+      max[k] += 5 * weight;
+    });
+  });
+
+  // Scenario
+  scenarioQuestions.forEach(q=>{
+    const chosen = answers[q.id];
+    if(chosen){
+      const opt = q.options.find(o=>o.key===chosen);
+      if(opt){
+        ['prog','sys','sec'].forEach(k=>{
+          const weight = opt.w[k] || 0;
+            // Сценарий рассматриваем как умножение на 5 (условный полный вес)
+          scores[k] += 5 * weight;
+          max[k] += 5 * weight;
+        });
+      }
+    } else {
+      // Не отвечен — ничего
+    }
+  });
+
+  const percent = {};
+  ['prog','sys','sec'].forEach(k=>{
+    percent[k] = max[k] > 0 ? (scores[k]/max[k])*100 : 0;
+  });
+
+  return {answers, scores, max, percent, allAnswered};
+}
+
+/* ===================== Интерпретация ===================== */
+function buildInterpretation(p){
+  const order = Object.entries(p).sort((a,b)=>b[1]-a[1]);
+  const [first, second, third] = order;
+  const gap12 = first[1]-second[1];
+  const gap23 = second[1]-third[1];
+
+  const lines = [];
+  lines.push(`Главный профиль: ${label(first[0])} (${first[1].toFixed(1)}%)`);
+  if(gap12 < 5){
+    lines.push("Близкие значения с другим направлением — комбинированный профиль.");
+  }
+  if(gap12 < 5 && gap23 < 5){
+    lines.push("Все три направления близки — вы универсал. Рекомендуется попробовать по мини‑проекту в каждом.");
+  }
+
+  // Специализированные сочетания
+  if(p.sec >= 55 && p.sys >= 55) lines.push("Сочетание SEC + SYS: инфраструктурная безопасность (SOC, hardening).");
+  if(p.prog >= 55 && p.sec >= 55) lines.push("Сочетание PROG + SEC: безопасная разработка, анализ кода, поиск уязвимостей приложений.");
+  if(p.prog >= 55 && p.sys >= 55) lines.push("Сочетание PROG + SYS: автоматизация инфраструктуры, DevOps/Platform инженерия.");
+
+  // Индивидуальные подсказки
+  if(p.prog > p.sys && p.prog > p.sec) {
+    lines.push("Рекомендация: сфокусируйтесь на одном языке (Python/Java) и создайте портфолио из 5+ проектов.");
+  }
+  if(p.sys > p.prog && p.sys > p.sec) {
+    lines.push("Рекомендация: практикуйтесь с Linux, виртуализацией, мониторингом + учите скрипты (Bash/Python).");
+  }
+  if(p.sec > p.prog && p.sec > p.sys) {
+    lines.push("Рекомендация: CTF-платформы, анализ логов, основы криптографии, чтение отчётов об угрозах.");
+  }
+
+  return lines;
+}
+
+function label(k){
+  return {
+    prog:"Программирование",
+    sys:"Сетевое/Системное администрирование",
+    sec:"Информационная безопасность"
+  }[k] || k;
+}
+
+/* ===================== Отображение результатов ===================== */
+let radarChart;
+
+function showResults(){
+  const {percent, allAnswered} = compute();
+  const resSection = document.getElementById('results');
+  resSection.style.display='block';
+
+  const interp = buildInterpretation(percent);
+
+  const summary = `
+    <p><strong>Проценты по направлениям:</strong></p>
+    <ul>
+      <li>Программирование: ${percent.prog.toFixed(1)}%</li>
+      <li>Администрирование: ${percent.sys.toFixed(1)}%</li>
+      <li>Информационная безопасность: ${percent.sec.toFixed(1)}%</li>
+    </ul>
+    <p><strong>Интерпретация:</strong></p>
+    <ul>${interp.map(l=>`<li>${l}</li>`).join('')}</ul>
+    ${!allAnswered ? '<p style="color:var(--warn);">Заполнены не все вопросы — точность снижена.</p>' : ''}
+  `;
+  document.getElementById('summaryText').innerHTML = summary;
+
+  // Cards
+  const boxes = [
+    {k:'prog', desc:'Создание приложений, логика, архитектура, оптимизация.'},
+    {k:'sys',  desc:'Инфраструктура, надежность, сети, автоматизация окружений.'},
+    {k:'sec',  desc:'Угрозы, защита, расследование, уязвимости, политика безопасности.'}
+  ];
+  const resBoxes = document.getElementById('resBoxes');
+  resBoxes.innerHTML = boxes.map(b=>`
+    <div class="res-box">
+      <h3>${label(b.k)}</h3>
+      <div class="res-score">${percent[b.k].toFixed(1)}%</div>
+      <div style="font-size:.7rem; opacity:.75;">${b.desc}</div>
+    </div>
+  `).join('');
+
+  // Chart
+  const ctx = document.getElementById('radarChart');
+  if(radarChart) radarChart.destroy();
+  radarChart = new Chart(ctx, {
+    type:'radar',
+    data:{
+      labels:['Программирование','Администрирование','Инфобез'],
+      datasets:[{
+        label:'Профиль',
+        data:[percent.prog, percent.sys, percent.sec],
+        fill:true,
+        backgroundColor:'rgba(63,164,255,0.25)',
+        borderColor:'rgba(63,164,255,0.95)',
+        pointBackgroundColor:'rgba(63,164,255,1)',
+        pointRadius:4,
+        borderWidth:2
+      }]
+    },
+    options:{
+      responsive:true,
+      scales:{
+        r:{
+          beginAtZero:true,
+          suggestedMax:100,
+          grid:{color:'#2d3842'},
+          angleLines:{color:'#2d3842'},
+          pointLabels:{color:'#b8c6d4', font:{size:12}}
+        }
+      },
+      plugins:{
+        legend:{labels:{color:'#cfd9e2'}}
+      }
+    }
+  });
+}
+
+/* ===================== Таймер ===================== */
+let remaining = TOTAL_TIME_SEC;
+let timerInterval;
+
+function formatTime(s){
+  const m = Math.floor(s/60);
+  const sec = s%60;
+  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+function startTimer(){
+  document.getElementById('timer').textContent = formatTime(remaining);
+  timerInterval = setInterval(()=>{
+    remaining--;
+    document.getElementById('timer').textContent = formatTime(remaining);
+    if(remaining <= 0){
+      clearInterval(timerInterval);
+      // Авто-подсчёт
+      showResults();
+      document.getElementById('timer').textContent = 'Время!';
+    }
+  }, 1000);
+}
+startTimer();
+
+/* ===================== Кнопки ===================== */
+document.getElementById('calcBtn').addEventListener('click', showResults);
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(!confirm('Сбросить все ответы и прогресс?')) return;
+  localStorage.removeItem('careerTestAnswers');
+  renderForm();
+  updateProgress();
+  remaining = TOTAL_TIME_SEC;
+  clearInterval(timerInterval);
+  startTimer();
+  document.getElementById('results').style.display='none';
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+function saveProgress(){
+  const data = {};
+  [...quizForm.querySelectorAll('.q-item')].forEach(el=>{
+    const id = el.dataset.qid;
+    const checked = quizForm.querySelector(`input[name="${id}"]:checked`);
+    if(checked) data[id] = checked.value;
+  });
+  localStorage.setItem('careerTestAnswers', JSON.stringify(data));
+}
+
+function loadProgress(){
+  const raw = localStorage.getItem('careerTestAnswers');
+  if(!raw) return;
+  const data = JSON.parse(raw);
+  Object.entries(data).forEach(([id,val])=>{
+    const el = quizForm.querySelector(`input[name="${id}"][value="${val}"]`) ||
+               quizForm.querySelector(`input[name="${id}"][value="${val}"]`);
+    if(el) el.checked = true;
+  });
+  updateProgress();
+}
+
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  saveProgress();
+  alert('Прогресс сохранён локально.');
+});
+document.getElementById('loadBtn').addEventListener('click', ()=>{
+  loadProgress();
+  alert('Прогресс загружен.');
+});
+
+/* Автосохранение каждые 30 сек */
+setInterval(saveProgress, 30000);
+
+/* Восстановление при перезагрузке */
+window.addEventListener('load', ()=>{
+  loadProgress();
+  updateProgress();
+});
+
+/* ===================== Копирование отчета ===================== */
+document.getElementById('copyBtn').addEventListener('click', ()=>{
+  const resultsSection = document.getElementById('summaryText');
+  if(!resultsSection.innerText.trim()){
+    document.getElementById('copyStatus').textContent='Сначала получите результат.';
+    return;
+  }
+  const text = resultsSection.innerText;
+  navigator.clipboard.writeText(text).then(()=>{
+    document.getElementById('copyStatus').textContent='Скопировано в буфер обмена.';
+    setTimeout(()=>document.getElementById('copyStatus').textContent='',3000);
+  }).catch(()=>{
+    document.getElementById('copyStatus').textContent='Не удалось скопировать.';
+  });
+});
+</script>
+</body>
+</html>
